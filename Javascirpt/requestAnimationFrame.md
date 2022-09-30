@@ -80,7 +80,65 @@ window.addEventListener('click', () => {
 
 <br>
 <br>
+
+## 💡 부드러운 감속의 원리
+
+> requestAnimationFrame()을 활용해 스크롤 애니메이션이 보다 더 부드럽게 동작하도록 적용하는 것
+
+- 속도 감속 시킬 때 자주 사용하는 식
+- 이동량이 점점 줄어들어서 0에 수렴하도록 식을 작성해서 부드러운 감속에 활용하는 것!
+  <br>
+  <br>
+
+  > **_c + ( d - c ) x 0.1_** <br> [ c : 현재위치, d : 목표위치 ]
+
+- 현재위치에 목표위치에서 현재위치를 뺀 값에 임의의 소수를 곱한 값을 더해줘서 이동시킴
+- 현재위치가 점점 목표위치로 이동하기 때문에 곱한 값이 점점 작아짐 → 따라서 이동거리 줄어드는 것 → 0에 수렴하면서 자연스러운 감속 진행
+
+```jsx
+const box = document.querySelector('.box');
+let acc = 0.1;
+let delayedYOffset = 0;
+let rafId;
+let rafState;
+
+window.addEventListener('scroll', () => {
+  if (!rafState) {
+    rafId = requestAnimationFrame(loop);
+    rafState = true;
+  }
+});
+
+function loop() {
+  // pageYOffset : 현재 스크롤 위치
+  delayedYOffset = delayedYOffset + (pageYOffset - delayedYOffset) * acc;
+  box.style.width = `${delayedYOffset}`;
+  console.log('loop');
+
+  rafId = requestAnimationFrame(loop);
+
+  if (Math.abs(pageYOffset - delayedYOffset) < 1) {
+    cancelAnimationFrame(rafId);
+    rafState = false;
+  }
+}
+
+loop();
+```
+
 <br>
+<br>
+
+🤔 **애니메이션은 멈췄지만 loop 함수 계속 돌아가는 문제 발생!**
+
+- 움직일 때만 반복되고 스크롤 멈추면 loop 함수도 멈추도록 로직 작성 필요
+- 목표위치와 현재위치의 차이가 1px 이하이면 반복을 멈추도록 조건 추가하기
+- **_requestAnimationFrame()_** 종료 시킬 땐 **_cancelAnimationFrame()_** 사용
+- **pageYOffset - delayedYOffset** 값을 그대로 사용하면, 스크롤을 위로 올릴 때는 계속 음수여서 부드러운 감속이 제대로 동작하지 않음!
+  우리가 필요한 건 거리이기 때문에 음수여도 상관이 없어야 함 ⇒ 따라서 절대값 처리 필요
+  <br>
+  <br>
+  <br>
 
 ### 📚 Reference
 
